@@ -1,278 +1,122 @@
-window.onload=function(){
+window.onload=function (){
 
-    //Adds instructions to the control area
-    let p = document.createElement('p');
-    let text = document.createTextNode('To start a new puzzle or to reset the current one '
-        +'Press the Reset Button.'+
-        'You may preview the different puzzles by hovering over the buttons. '+
-        'Note you may not preview other puzzles once you have started');
-    p.appendChild(text);
+    /*Extra feature added multiple backgrounds 
+        and the ability to select any one of them
 
-    let control = document.getElementById('controls');
-    control.insertBefore(p,control.childNodes[0]);
+    */
+    let images=[Array('Lime','lime.jpg'),
+            Array('Castle','castle.jpg'),
+            Array('Stream','stream.jpg'),
+            Array('Waterfall','waterfall.jpg'),
+            Array('Bridge','bridge.jpg'),
+            Array('Forest','forest.jpeg')];
 
-    //Create and adds buttons to the control area
+    //Creates drop down box        
+    let select = document.createElement("SELECT");
+    select.setAttribute("id","Images");
+
+    for (let m=0; m<images.length;m++){
+        let opt=document.createElement("option");
+        opt.setAttribute("value",images[m][1]);
+        opt.appendChild(document.createTextNode(images[m][0]));
+        select.appendChild(opt);
+    }
+
+
+    //Create button for selecting drop down box   
     let a = document.createElement("BUTTON");
-    let at = document.createTextNode("Waterfall");
+    a.setAttribute('id','puzzle');
+    let at = document.createTextNode("Select Puzzle");
     a.appendChild(at);
+    let p = document.createElement('p');
+    let notes = document.createTextNode('Press Shuffle to start');
+    let notes2 = document.createTextNode('Press Select Puzzle to change the puzzle image then press shuffle twice to start');
+    p.appendChild(notes);
+    p.appendChild(document.createElement('BR'));
+    p.appendChild(notes2);
 
-    let b = document.createElement("BUTTON");
-    let bt = document.createTextNode("Forest");
-    b.appendChild(bt);
-
-
-	let c = document.createElement("BUTTON");
-    let ct = document.createTextNode("Bridge");
-    c.appendChild(ct);
-
-    let d = document.createElement("BUTTON");
-    let dt = document.createTextNode("Castle");
-    d.appendChild(dt);
-
-    let e = document.createElement("BUTTON");
-    let et = document.createTextNode("Stream");
-    e.appendChild(et);
-
-    let f = document.createElement("BUTTON");
-    let ft = document.createTextNode("Restart");
-    f.appendChild(ft);
-
-
+    //Add drop down box and button to the control area 
+    let control=document.getElementById('controls');
+    control.appendChild(select);
     control.appendChild(a);
-    control.appendChild(b);
-    control.appendChild(c);
-    control.appendChild(d);
-    control.appendChild(e);
-    control.appendChild(f);
+    control.appendChild(p);
 
-    ////////////////////////////////////////////////
 
-    
     let starttime = 0;
-    
+    let randompic = ''
+
+    //Generates random pic for puzzle creation
+    let random=Math.floor((Math.random()*5)+0);
+    randompic= images[random][1];
 
     //creates the puzzle for viewing
-    renderpuzzle('lime.jpg');
-    
+    renderpuzzle(randompic);
+
+    let emptytop='';
+    let emptyleft='';
+
+    let puzzlselect = document.getElementById('puzzle');
+    puzzlselect.addEventListener('click', function(){
+       if(starttime>0){
+            randompic=document.getElementById('Images').value;
+            return resetpieces(randompic);
+       } 
+    });
+
     //Adds the listeners to buttons in the control area
     let shuffle = document.getElementById('shufflebutton');
-    shuffle.addEventListener('mouseover',function(){
-        if(starttime==0){
-            renderpuzzle('lime.jpg');
-        }
-    });
+    shuffle.addEventListener('click', function(){ 
 
-    shuffle.addEventListener('click', function(){
-    	if(starttime===0){
-    		starttime++;
-            let pieces=renderpuzzle('lime.jpg');
-    		pieces=shufflepieces(pieces);
+        starttime++;
 
-    		pieces[0].forEach(function(tile){
-        		let pos = Number(tile.innerHTML);
-        		tile.addEventListener("mouseover",changeclass(pos,pieces,tile));
-    		});
+        let pieces=renderpuzzle(randompic);
+        emptytop=pieces['emptytop'];
+        emptyleft=pieces['emptyleft'];
 
-    		pieces[0].forEach(function(tile){
-        		let pos = Number(tile.innerHTML);
-        		tile.addEventListener("click",function(){
-            		let value = 1;
-            		return movetile(pos,pieces,tile,value)
-        		});
-    		});
-    	}
-    	else{
-    		location.reload();
-    	}
-    });
+        pieces=shufflepieces(emptytop,emptyleft);
+        emptytop=pieces[0];
+        emptyleft=pieces[1];
 
-    a.addEventListener('mouseover',function(){
-        if(starttime==0){
-            renderpuzzle('waterfall.jpg');
-        }
-    });
 
-    a.addEventListener('click',function(){
-        if(starttime===0){
-            starttime++;
-            let pieces=renderpuzzle('waterfall.jpg');
-            pieces=shufflepieces(pieces);
+        let doc= document.getElementById('puzzlearea');
+        let v=doc.querySelectorAll('div');
+        v.forEach(function(tile){
+            tile.addEventListener("mouseover",addmoveableclass(tile,emptytop,emptyleft));
+        });
 
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("mouseover",changeclass(pos,pieces,tile));
+        v.forEach(function(tile){
+            tile.addEventListener("click",function(){
+                if(moveabletest(tile,emptytop,emptyleft)===true){
+                    let space= movetile(tile,emptytop,emptyleft);
+                    emptytop=space[0];
+                    emptyleft=space[1]
+                    recalculate(emptytop,emptyleft);
+                }
             });
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("click",function(){
-                    let value = 1;
-                    return movetile(pos,pieces,tile,value)
-                });
-            });
-        }
-        else{
-            location.reload();
-        }
+        });
     });
-
-    b.addEventListener('mouseover',function(){
-        if(starttime==0){
-            renderpuzzle('forest.jpeg');
-        }
-    });
-
-    b.addEventListener('click',function(){
-        if(starttime===0){
-            starttime++;
-            let pieces=renderpuzzle('forest.jpeg');
-            pieces=shufflepieces(pieces);
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("mouseover",changeclass(pos,pieces,tile));
-            });
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("click",function(){
-                    let value = 1;
-                    return movetile(pos,pieces,tile,value)
-                });
-            });
-        }
-        else{
-            location.reload();
-            renderpuzzle('forest.jpeg');
-        }
-    });
-
-
-
-    c.addEventListener('mouseover',function(){
-        if(starttime==0){
-            renderpuzzle('bridge.jpg');
-        }
-    });
-
-    c.addEventListener('click',function(){
-        if(starttime===0){
-            starttime++;
-            let pieces=renderpuzzle('bridge.jpg');
-            pieces=shufflepieces(pieces);
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("mouseover",changeclass(pos,pieces,tile));
-            });
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("click",function(){
-                    let value = 1;
-                    return movetile(pos,pieces,tile,value)
-                });
-            });
-        }
-        else{
-            location.reload();
-        }
-    });
-
-    d.addEventListener('mouseover',function(){
-        if(starttime==0){
-            renderpuzzle('castle.jpg');
-        }
-    });
-
-    d.addEventListener('click',function(){
-        if(starttime===0){
-            starttime++;
-            let pieces=renderpuzzle('castle.jpg');
-            pieces=shufflepieces(pieces);
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("mouseover",changeclass(pos,pieces,tile));
-            });
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("click",function(){
-                    let value = 1;
-                    return movetile(pos,pieces,tile,value)
-                });
-            });
-        }
-        else{
-            location.reload();
-        }
-    });
-
-
-    e.addEventListener('mouseover',function(){
-        if(starttime==0){
-            renderpuzzle('stream.jpg');
-        }
-    });
-
-    e.addEventListener('click',function(){
-        if(starttime===0){
-            starttime++;
-            let pieces=renderpuzzle('stream.jpg');
-            pieces=shufflepieces(pieces);
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("mouseover",changeclass(pos,pieces,tile));
-            });
-
-            pieces[0].forEach(function(tile){
-                let pos = Number(tile.innerHTML);
-                tile.addEventListener("click",function(){
-                    let value = 1;
-                    return movetile(pos,pieces,tile,value)
-                });
-            });
-        }
-        else{
-            location.reload();
-        }
-    });
-
-    f.addEventListener('click',function(){
-        starttime=0;
-        location.reload();
-    })
-    ////////////////////////////////////////////////////////////////////////
-
+    
 }
 
 
 function renderpuzzle(image){
-    let doc = document.querySelectorAll('div');
-    let number = 0;
+    let number = 1;
     let top = 80;
     let left = 500;
-    let time = 1;
     let int = 0;
     let x = 0;
     let y = 0;
     let t = '';
     let l = '';
     let emptytop = 0;
-    let emptyleft= 0;
-    let positions = new Array();
-    let tiles = new Array();
-    let emptyspace; 
+    let emptyleft= 0; 
+    let emptyspace;
 
-
+    let doc= document.getElementById('puzzlearea');
+    let v=doc.querySelectorAll('div');
+    
     //Layout puzzle pieces
-    doc.forEach(function(item,number){
-        if(number > 1 && number <= 16){
-            
-            //Adds tiles to tile array
-            tiles[time]=item;
+    v.forEach(function(item){
             
             //Adds puzzle piece class
             item.classList.add('puzzlepiece');
@@ -291,10 +135,6 @@ function renderpuzzle(image){
             l=left;
             item.style.left=l+='px';
             
-            //Add the positions of the tile to an array
-            positions[time]={'top':top,'left':left};
-           
-            
             //Set background position for images
             y=int;
             item.style.backgroundPositionY=-y+'px';
@@ -302,17 +142,12 @@ function renderpuzzle(image){
             item.style.backgroundPositionX=-x+'px';
             x+=100;
             
-           
-            
-            //time keeps track of the current tile
-            time++;
-            
             //changes the position for the next tile
             left+=100;
             number++;
             
             //Changes the positions for the next row
-            if((time-1)%4===0){
+            if((number-1)%4===0){
               top+=100;
                 left=500;
                 int +=100;
@@ -320,72 +155,71 @@ function renderpuzzle(image){
             }
             
             //Adds the empty space location to the array
-            if(number===16){
+            if(number===15){
                 emptytop=+top;
                 emptyleft=left+100;
-                emptyspace={'emptytop':emptytop,'emptyleft':emptyleft};
+                emptyspace={'emptytop':emptytop+'px','emptyleft':emptyleft+'px'};
             }
-        }
-    });
+        });
     
-    return [tiles,positions,emptyspace];
+    return emptyspace;
 }
+
+function resetpieces(randompic){
+    let doc= document.getElementById('puzzlearea');
+    let v=doc.querySelectorAll('div');
+
+    v.forEach(function(tile){
+        tile.style.top='0 px';
+        tile.style.left='0 px';
+        tile.removeEventListener('mouseover',removemoveableclass(tile));
+        tile.classList.remove('puzzlepiece');
+        tile.removeEventListener('click',removeclick());
+    });
+    return renderpuzzle(randompic);
+}
+
 
 //Shuffle puzzle pieces randomly
-function shufflepieces(pieces){
-	let n = pieces[1].length;
-	for(let i = 1; i < n; i++){
-		let r = i + parseInt(Math.random() * (n - i));
-		swappieces(pieces[0][i],pieces[0][r],pieces[1][i],pieces[1][r]);
-	}
+function shufflepieces(emptytop,emptyleft){
+    let doc= document.getElementById('puzzlearea');
+    let v=doc.querySelectorAll('div');
+   
+    let n = v.length;
+    for(let i = 0; i < n; i++){
+        let r = i + parseInt(Math.random() * (n - i));
+        swappieces(v[i],v[r]);
+    }
+
     //Locate a random tile and swaps it with the last piece
-    let last=Math.floor((Math.random()*15)+1);
-    
-
-    let temppostop=pieces[2]['emptytop'];
-    let tempposleft=pieces[2]['emptyleft'];
-    
-    pieces[2]['emptytop']=pieces[1][last]['top'];
-    pieces[2]['emptyleft']=pieces[1][last]['left'];
-    
-    pieces[1][last]['top']=temppostop;
-    pieces[1][last]['left']=tempposleft;
-    
-
-    pieces[0][last].style.top=temppostop+'px';
-    pieces[0][last].style.left=tempposleft+'px';
-    
-	return pieces;
-}
+    let last=Math.floor((Math.random()*14)+0);
+    return freetileswap(v[last],emptytop,emptyleft);
+} 
 
 //Swap pieces for the shuffle
-function swappieces(tile1,tile2,value1,value2){
-	let temptop = parseInt(tile2.style.top);
-	let templeft = parseInt(tile2.style.left);
+function swappieces(tile1,tile2){
+    let temptop = tile2.style.top;
+    let templeft = tile2.style.left;
 
-	tile2.style.top = parseInt(tile1.style.top)+"px";
-	tile2.style.left = parseInt(tile1.style.left)+"px";
+    tile2.style.top = tile1.style.top;
+    tile2.style.left = tile1.style.left;
 
-	tile1.style.top = temptop+"px";
-	tile1.style.left = templeft+"px";
+    tile1.style.top = temptop;
+    tile1.style.left = templeft;
 
-	let tempvaluetop = value2['top'];
-	let tempvalueleft = value2['left'];
-
-	value2['top']= value1['top'];
-	value2['left'] = value1['left'];
-
-	value1['top']=tempvaluetop;
-	value1['left']= tempvalueleft;
 }
 
 //Test the moveability of a tile 
-function moveabletest(currtop,freetop,currleft,freeleft){
+function moveabletest(tile,freetop,freeleft){
     let value = '';
-   	//left tile freetop-currtop =0 and freeleft - currleft = 100
-   	//right tile freetop-currtop =0 and freeleft - currleft = -100
-   	//bottom tile freetop-currtop =-100 and freeleft - currleft = 0
-   	//top freetop - currtop =100 and freeleft-currleft = 0
+    let currtop=parseInt(tile.style.top);
+    freetop=parseInt(freetop);
+    let currleft=parseInt(tile.style.left);
+    freeleft=parseInt(freeleft);
+    //left tile freetop-currtop =0 and freeleft - currleft = 100
+    //right tile freetop-currtop =0 and freeleft - currleft = -100
+    //bottom tile freetop-currtop =-100 and freeleft - currleft = 0
+    //top freetop - currtop =100 and freeleft-currleft = 0
     if((freetop-currtop===0 && freeleft-currleft===100) || 
         (freetop-currtop===0 && freeleft-currleft===-100) || 
         (freetop-currtop===-100 && freeleft-currleft===0) || 
@@ -400,10 +234,23 @@ function moveabletest(currtop,freetop,currleft,freeleft){
     return value;   
 }
 
+//Retest tiles to see which tiles are moveable 
+function recalculate(emptytop,emptyleft){
+    let doc= document.getElementById('puzzlearea');
+    let v=doc.querySelectorAll('div');
+
+    v.forEach(function(tile){
+        tile.removeEventListener("mouseover",removemoveableclass(tile));
+    });
+    
+    v.forEach(function(tile){
+        tile.addEventListener("mouseover",addmoveableclass(tile,emptytop,emptyleft));
+    });
+}
 
 // helper function Adds moveable class 
-function addmoveableclass(currtop,freetop,currleft,freeleft,tilepiece){
-    if(moveabletest(currtop,freetop,currleft,freeleft)===true){
+function addmoveableclass(tilepiece,freetop,freeleft){
+    if(moveabletest(tilepiece,freetop,freeleft)===true){
        return tilepiece.classList.add('movablepiece'); 
     }
 }
@@ -413,58 +260,25 @@ function removemoveableclass(tilepiece){
     return tilepiece.classList.remove('movablepiece');
 }
 
-//adds moveable class 
-function changeclass(pos,pieces,tilepiece){   
-    return addmoveableclass(pieces[1][pos]['top'],pieces[2]['emptytop'],
-        pieces[1][pos]['left'],pieces[2]['emptyleft'],tilepiece)
-}
-
 //Swaps tile positions
-function swaptilespos(tile,emptyvalue,currtilevalue,tilearray){
-    
-    
-    let temptop = emptyvalue['emptytop'];
-    let templeft = emptyvalue['emptyleft'];
-    
-    emptyvalue['emptytop'] = currtilevalue['top'];
-    emptyvalue['emptyleft'] = currtilevalue['left'];
-    
-    currtilevalue['top'] = temptop;
-    currtilevalue['left'] = templeft;
-    
-    tile.style.top=temptop+'px';
-    tile.style.left=templeft+'px';
-    
-    return recalculate(tilearray);
+function freetileswap(tile,freetop,freeleft){
+    let temptop = freetop;
+    let templeft = freeleft;
+
+    freetop=tile.style.top;
+    freeleft=tile.style.left;
+
+    tile.style.top = temptop;
+    tile.style.left = templeft; 
+
+    return [freetop,freeleft]; 
 }
 
-//Retest tiles to see which tiles are moveable 
-function recalculate(tilearray){
-
-    tilearray[0].forEach(function(tile){
-        tile.removeEventListener("mouseover",removemoveableclass(tile));
-    });
-    
-    tilearray[0].forEach(function(tile){
-        let pos = Number(tile.innerHTML);
-        tile.removeEventListener("click",function(){
-        let	value=0;
-        });
-    });
-    
-    tilearray[0].forEach(function(tile){
-        let pos = Number(tile.innerHTML);
-        tile.addEventListener("mouseover",changeclass(pos,tilearray,tile));
-    });
+function removeclick(){
+    let value = false;
+    return value;
 }
 
-function movetile(pos,tilearray,tile,click){
-    if(moveabletest(tilearray[1][pos]['top'],tilearray[2]['emptytop'],tilearray[1][pos]['left'],
-        tilearray[2]['emptyleft'])===true && click==1){
-            return swaptilespos(tile,tilearray[2],tilearray[1][pos],tilearray);
-    }
-    else{
-            return 0;
-    }
+function movetile(tile,freetop,freeleft){
+    return freetileswap(tile,freetop,freeleft);
 }
-
